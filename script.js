@@ -5,97 +5,87 @@
 (() => {
   'use strict';
 
-  // ─── DOM Elements ───────────────────────────────────
+  // ─── DOM shorthand ──────────────────────────────────
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
-  const preloader     = $('#preloader');
-  const constellationCanvas = $('#constellation-canvas');
-  const enterBtn      = $('#enter-btn');
-  const site          = $('#site');
-  const auroraBg      = $('#aurora-bg');
-  const navbar        = $('#navbar');
-  const menuToggle    = $('#menu-toggle');
-  const mobileNav     = $('#mobile-nav');
-  const typingText    = $('#typing-text');
-  const navLinks      = $$('.nav-link');
+  const preloader      = $('#preloader');
+  const constCanvas    = $('#constellation-canvas');
+  const site           = $('#site');
+  const auroraBg       = $('#aurora-bg');
+  const navbar         = $('#navbar');
+  const menuToggle     = $('#menu-toggle');
+  const mobileNav      = $('#mobile-nav');
+  const typingText     = $('#typing-text');
+  const navLinks       = $$('.nav-link');
   const mobileNavLinks = $$('.mobile-nav-link');
-  const dots          = $$('.dot');
-  const sections      = $$('.section, .hero-section');
+  const dots           = $$('.dot');
+  const sections       = $$('.section, .hero-section');
 
-  // ─── Typing Strings ────────────────────────────────
+  // ─── Typing strings ─────────────────────────────────
   const typingStrings = [
     'Full Stack Developer',
-    'Java & Spring Boot Enthusiast',
-    'AI/ML Explorer',
-    'Problem Solver @ LeetCode',
+    'Java & Spring Boot Engineer',
+    'AI / ML Explorer',
     'M.Tech CS @ NIT Calicut',
-    'Building scalable systems'
+    'Systems Programmer',
+    'Building scalable solutions'
   ];
 
   // ═══════════════════════════════════════════════════
-  // CONSTELLATION INTRO ANIMATION
+  // CONSTELLATION (preloader background)
   // ═══════════════════════════════════════════════════
   function initConstellation() {
-    const canvas = constellationCanvas;
+    const canvas = constCanvas;
     const ctx = canvas.getContext('2d');
     let animId;
     let particles = [];
-    const PARTICLE_COUNT = 100;
-    const CONNECTION_DIST = 150;
+    const COUNT = 100;
+    const DIST = 150;
 
     function resize() {
-      canvas.width = window.innerWidth;
+      canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-
     resize();
     window.addEventListener('resize', resize);
 
     class Particle {
       constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+        this.x  = Math.random() * canvas.width;
+        this.y  = Math.random() * canvas.height;
         this.vx = (Math.random() - 0.5) * 0.5;
         this.vy = (Math.random() - 0.5) * 0.5;
-        this.radius = Math.random() * 2 + 0.5;
-        this.alpha = Math.random() * 0.6 + 0.2;
+        this.r  = Math.random() * 2 + 0.5;
+        this.a  = Math.random() * 0.6 + 0.2;
       }
-
       update() {
         this.x += this.vx;
         this.y += this.vy;
-
-        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+        if (this.x < 0 || this.x > canvas.width)  this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height)  this.vy *= -1;
       }
-
       draw() {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 229, 255, ${this.alpha})`;
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,229,255,${this.a})`;
         ctx.fill();
       }
     }
 
-    // Init particles
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push(new Particle());
-    }
+    for (let i = 0; i < COUNT; i++) particles.push(new Particle());
 
-    function drawConnections() {
+    function drawLines() {
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x;
           const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist < CONNECTION_DIST) {
-            const alpha = (1 - dist / CONNECTION_DIST) * 0.15;
+          const d  = Math.sqrt(dx * dx + dy * dy);
+          if (d < DIST) {
             ctx.beginPath();
             ctx.moveTo(particles[i].x, particles[i].y);
             ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+            ctx.strokeStyle = `rgba(0,229,255,${(1 - d / DIST) * 0.14})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -105,206 +95,254 @@
 
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particles.forEach(p => {
-        p.update();
-        p.draw();
-      });
-      drawConnections();
+      particles.forEach(p => { p.update(); p.draw(); });
+      drawLines();
       animId = requestAnimationFrame(animate);
     }
-
     animate();
 
-    // Cleanup function
-    return () => {
-      cancelAnimationFrame(animId);
-      particles = [];
-    };
+    return () => { cancelAnimationFrame(animId); particles = []; };
   }
 
-  const cleanupConstellation = initConstellation();
+  const stopConstellation = initConstellation();
 
   // ═══════════════════════════════════════════════════
-  // ENTER SITE
+  // CINEMATIC PRELOADER — auto-runs, no button
   // ═══════════════════════════════════════════════════
-  enterBtn.addEventListener('click', () => {
-    preloader.classList.add('fade-out');
-    cleanupConstellation();
+  function runPreloader() {
+    const counterEl  = $('#pre-counter');
+    const fillEl     = $('#pre-fill');
+    const nameEl     = $('#pre-name');
+    const preUI      = document.querySelector('.preloader-ui');
+    const curtainTop = $('#curtain-top');
+    const curtainBot = $('#curtain-bottom');
 
+    const FINAL = 'PRAKASH KUMAR SARANGI';
+    const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ▓░▒■□@#$%';
+
+    function scramble(pct) {
+      const revealed = Math.floor((pct / 100) * FINAL.length);
+      return [...FINAL].map((ch, i) => {
+        if (ch === ' ') return ' ';
+        if (i < revealed) return ch;
+        return (Math.random() < 0.55) ? ch : GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      }).join('');
+    }
+
+    let progress = 0;
+
+    function tick() {
+      // Variable speed: fast start → dramatic slow finish
+      const spd = progress < 30 ? 1.9 : progress < 65 ? 1.2 : progress < 88 ? 0.6 : 0.2;
+      progress = Math.min(100, progress + spd * (0.7 + Math.random() * 0.6));
+
+      const floor = Math.floor(progress);
+      if (counterEl) counterEl.textContent = String(floor).padStart(2, '0');
+      if (fillEl)    fillEl.style.width = progress + '%';
+      if (nameEl)    nameEl.textContent = scramble(progress);
+
+      if (progress < 100) {
+        requestAnimationFrame(tick);
+      } else {
+        if (nameEl) nameEl.textContent = FINAL;
+        setTimeout(() => revealSite(preUI, curtainTop, curtainBot), 550);
+      }
+    }
+
+    // Brief pause before starting (let CSS animations settle)
+    setTimeout(() => requestAnimationFrame(tick), 420);
+  }
+
+  runPreloader();
+
+  // ═══════════════════════════════════════════════════
+  // CURTAIN REVEAL
+  // ═══════════════════════════════════════════════════
+  function revealSite(preUI, curtainTop, curtainBot) {
+    // Fade out UI text
+    if (preUI) preUI.style.opacity = '0';
+
+    // Fade out constellation canvas so site shows through curtain gap
+    constCanvas.style.transition = 'opacity 0.5s ease';
+    constCanvas.style.opacity = '0';
+
+    // Activate the main site behind the preloader
+    site.classList.remove('hidden');
+    site.style.opacity = '1';
+    site.style.pointerEvents = 'auto';
+    initAuroraBackground();
+    startTyping();
+    initScrollReveal();
+    initCardGlow();
+    initContactForm();
+    initCursor();
+    stopConstellation();
+
+    // Split curtains after canvas fades (site now visible through the gap)
     setTimeout(() => {
-      preloader.style.display = 'none';
-      site.classList.remove('hidden');
-      site.style.opacity = '1';
-      site.style.pointerEvents = 'auto';
-      initAuroraBackground();
-      startTyping();
-    }, 800);
-  });
+      if (curtainTop) curtainTop.classList.add('reveal');
+      if (curtainBot) curtainBot.classList.add('reveal');
+    }, 380);
+
+    setTimeout(() => { preloader.style.display = 'none'; }, 1900);
+  }
 
   // ═══════════════════════════════════════════════════
-  // AURORA BACKGROUND
+  // AURORA STARFIELD BACKGROUND
   // ═══════════════════════════════════════════════════
   function initAuroraBackground() {
     const canvas = auroraBg;
     const ctx = canvas.getContext('2d');
+    const STARS = 200;
     let stars = [];
-    const STAR_COUNT = 180;
 
     function resize() {
-      canvas.width = window.innerWidth;
+      canvas.width  = window.innerWidth;
       canvas.height = window.innerHeight;
     }
     resize();
     window.addEventListener('resize', resize);
 
-    // Stars
-    for (let i = 0; i < STAR_COUNT; i++) {
+    for (let i = 0; i < STARS; i++) {
       stars.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
-        radius: Math.random() * 1.5 + 0.3,
-        alpha: Math.random(),
+        x:     Math.random() * canvas.width,
+        y:     Math.random() * canvas.height,
+        r:     Math.random() * 1.4 + 0.3,
+        a:     Math.random(),
         speed: Math.random() * 0.005 + 0.002,
         phase: Math.random() * Math.PI * 2
       });
     }
 
-    let time = 0;
+    let t = 0;
 
-    function drawAurora() {
-      time += 0.003;
+    function draw() {
+      t += 0.003;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw subtle aurora gradient blobs
-      const auroraGradient1 = ctx.createRadialGradient(
-        canvas.width * 0.3 + Math.sin(time * 0.7) * 100,
-        canvas.height * 0.2 + Math.cos(time * 0.5) * 50,
+      // Two drifting aurora blobs
+      const g1 = ctx.createRadialGradient(
+        canvas.width * 0.3 + Math.sin(t * 0.7) * 100,
+        canvas.height * 0.2 + Math.cos(t * 0.5) * 50,
         0,
-        canvas.width * 0.3,
-        canvas.height * 0.2,
-        canvas.width * 0.4
+        canvas.width * 0.3, canvas.height * 0.2,
+        canvas.width * 0.42
       );
-      auroraGradient1.addColorStop(0, 'rgba(0, 229, 255, 0.03)');
-      auroraGradient1.addColorStop(1, 'transparent');
-      ctx.fillStyle = auroraGradient1;
+      g1.addColorStop(0, 'rgba(0,229,255,0.032)');
+      g1.addColorStop(1, 'transparent');
+      ctx.fillStyle = g1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      const auroraGradient2 = ctx.createRadialGradient(
-        canvas.width * 0.7 + Math.cos(time * 0.4) * 80,
-        canvas.height * 0.6 + Math.sin(time * 0.6) * 60,
+      const g2 = ctx.createRadialGradient(
+        canvas.width * 0.72 + Math.cos(t * 0.4) * 80,
+        canvas.height * 0.65 + Math.sin(t * 0.6) * 60,
         0,
-        canvas.width * 0.7,
-        canvas.height * 0.6,
-        canvas.width * 0.35
+        canvas.width * 0.72, canvas.height * 0.65,
+        canvas.width * 0.36
       );
-      auroraGradient2.addColorStop(0, 'rgba(168, 85, 247, 0.025)');
-      auroraGradient2.addColorStop(1, 'transparent');
-      ctx.fillStyle = auroraGradient2;
+      g2.addColorStop(0, 'rgba(168,85,247,0.026)');
+      g2.addColorStop(1, 'transparent');
+      ctx.fillStyle = g2;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw twinkling stars
-      stars.forEach(star => {
-        const twinkle = Math.sin(time * 100 * star.speed + star.phase) * 0.4 + 0.6;
+      // Twinkling stars
+      stars.forEach(s => {
+        const twinkle = Math.sin(t * 100 * s.speed + s.phase) * 0.4 + 0.6;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 210, 240, ${star.alpha * twinkle * 0.6})`;
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(200,210,240,${s.a * twinkle * 0.55})`;
         ctx.fill();
       });
 
-      requestAnimationFrame(drawAurora);
+      requestAnimationFrame(draw);
     }
-
-    drawAurora();
+    draw();
   }
 
   // ═══════════════════════════════════════════════════
   // TYPING ANIMATION
   // ═══════════════════════════════════════════════════
   function startTyping() {
-    let strIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let typeSpeed = 80;
+    let si = 0, ci = 0, deleting = false, spd = 80;
 
     function type() {
-      const currentStr = typingStrings[strIndex];
+      const str = typingStrings[si];
 
-      if (isDeleting) {
-        charIndex--;
-        typeSpeed = 40;
+      if (deleting) {
+        ci--;
+        spd = 38;
       } else {
-        charIndex++;
-        typeSpeed = 80 + Math.random() * 40; // Slightly random for human feel
+        ci++;
+        spd = 75 + Math.random() * 45;
       }
 
-      typingText.textContent = currentStr.substring(0, charIndex);
+      typingText.textContent = str.substring(0, ci);
 
-      if (!isDeleting && charIndex === currentStr.length) {
-        typeSpeed = 2000; // Pause at end
-        isDeleting = true;
-      } else if (isDeleting && charIndex === 0) {
-        isDeleting = false;
-        strIndex = (strIndex + 1) % typingStrings.length;
-        typeSpeed = 500; // Brief pause before next word
+      if (!deleting && ci === str.length) {
+        spd = 2200;
+        deleting = true;
+      } else if (deleting && ci === 0) {
+        deleting = false;
+        si = (si + 1) % typingStrings.length;
+        spd = 500;
       }
 
-      setTimeout(type, typeSpeed);
+      setTimeout(type, spd);
     }
 
-    setTimeout(type, 1500);
+    setTimeout(type, 1400);
   }
 
   // ═══════════════════════════════════════════════════
-  // NAVBAR SCROLL BEHAVIOR
+  // CUSTOM MAGNETIC CURSOR
   // ═══════════════════════════════════════════════════
-  let lastScroll = 0;
+  function initCursor() {
+    const dot  = $('#cursor-dot');
+    const ring = $('#cursor-ring');
+    if (!dot || !ring || window.matchMedia('(hover: none)').matches) return;
 
-  window.addEventListener('scroll', () => {
-    const scrollY = window.scrollY;
+    dot.style.display  = 'block';
+    ring.style.display = 'block';
+    document.documentElement.classList.add('cursor-active');
 
-    // Add/remove scrolled class
-    if (scrollY > 50) {
-      navbar.classList.add('scrolled');
-    } else {
-      navbar.classList.remove('scrolled');
+    let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    let rx = cx, ry = cy;
+
+    document.addEventListener('mousemove', e => { cx = e.clientX; cy = e.clientY; });
+
+    function animateCursor() {
+      rx += (cx - rx) * 0.13;
+      ry += (cy - ry) * 0.13;
+      dot.style.transform  = `translate(${cx - 4}px, ${cy - 4}px)`;
+      ring.style.transform = `translate(${rx - 18}px, ${ry - 18}px)`;
+      requestAnimationFrame(animateCursor);
     }
+    animateCursor();
 
-    // Update active section
+    // Expand ring on interactive elements
+    $$('a, button, .project-card, .skill-pill, .stat-card, .edu-card, .cert-item').forEach(el => {
+      el.addEventListener('mouseenter', () => ring.classList.add('expanded'));
+      el.addEventListener('mouseleave', () => ring.classList.remove('expanded'));
+    });
+  }
+
+  // ═══════════════════════════════════════════════════
+  // NAVBAR SCROLL
+  // ═══════════════════════════════════════════════════
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 50);
     updateActiveSection();
-
-    lastScroll = scrollY;
   });
 
-  // ═══════════════════════════════════════════════════
-  // ACTIVE SECTION TRACKING
-  // ═══════════════════════════════════════════════════
   function updateActiveSection() {
     let current = '';
-
-    sections.forEach(section => {
-      const sectionTop = section.offsetTop;
-      const sectionHeight = section.offsetHeight;
-
-      if (window.scrollY >= sectionTop - sectionHeight / 3) {
-        current = section.getAttribute('id');
+    sections.forEach(sec => {
+      if (window.scrollY >= sec.offsetTop - sec.offsetHeight / 3) {
+        current = sec.getAttribute('id');
       }
     });
-
-    // Update nav links
-    navLinks.forEach(link => {
-      link.classList.remove('active');
-      if (link.dataset.section === current) {
-        link.classList.add('active');
-      }
-    });
-
-    // Update dots
-    dots.forEach(dot => {
-      dot.classList.remove('active');
-      if (dot.dataset.section === current) {
-        dot.classList.add('active');
-      }
-    });
+    navLinks.forEach(l => l.classList.toggle('active', l.dataset.section === current));
+    dots.forEach(d => d.classList.toggle('active', d.dataset.section === current));
   }
 
   // ═══════════════════════════════════════════════════
@@ -325,29 +363,68 @@
   });
 
   // ═══════════════════════════════════════════════════
-  // SMOOTH SCROLL FOR NAV LINKS
+  // SMOOTH SCROLL
   // ═══════════════════════════════════════════════════
   [...navLinks, ...mobileNavLinks, ...dots].forEach(link => {
-    link.addEventListener('click', (e) => {
+    link.addEventListener('click', e => {
       e.preventDefault();
-      const targetId = link.getAttribute('href').slice(1);
-      const target = document.getElementById(targetId);
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth' });
-      }
+      const target = document.getElementById(link.getAttribute('href').slice(1));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
     });
   });
 
   // ═══════════════════════════════════════════════════
-  // SCROLL INDICATOR HIDE ON SCROLL
+  // SCROLL INDICATOR
   // ═══════════════════════════════════════════════════
   const scrollIndicator = $('#scroll-indicator');
   window.addEventListener('scroll', () => {
-    if (window.scrollY > 200) {
-      scrollIndicator.style.opacity = '0';
-    } else {
-      scrollIndicator.style.opacity = '';
-    }
+    scrollIndicator.style.opacity = window.scrollY > 200 ? '0' : '';
   });
+
+  // ═══════════════════════════════════════════════════
+  // SCROLL REVEAL (IntersectionObserver)
+  // ═══════════════════════════════════════════════════
+  function initScrollReveal() {
+    const observer = new IntersectionObserver(
+      entries => entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+          observer.unobserve(entry.target);
+        }
+      }),
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+    $$('.reveal-on-scroll').forEach(el => observer.observe(el));
+  }
+
+  // ═══════════════════════════════════════════════════
+  // PROJECT CARD MOUSE GLOW
+  // ═══════════════════════════════════════════════════
+  function initCardGlow() {
+    $$('.project-card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mouse-x', ((e.clientX - r.left) / r.width * 100) + '%');
+        card.style.setProperty('--mouse-y', ((e.clientY - r.top)  / r.height * 100) + '%');
+      });
+    });
+  }
+
+  // ═══════════════════════════════════════════════════
+  // CONTACT FORM — mailto fallback
+  // ═══════════════════════════════════════════════════
+  function initContactForm() {
+    const form = $('#contact-form');
+    if (!form) return;
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name    = form.querySelector('#cf-name').value.trim();
+      const email   = form.querySelector('#cf-email').value.trim();
+      const subject = form.querySelector('#cf-subject').value.trim();
+      const message = form.querySelector('#cf-message').value.trim();
+      const body    = `From: ${name} (${email})\n\n${message}`;
+      window.location.href = `mailto:prakashsarangi0070@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    });
+  }
 
 })();
